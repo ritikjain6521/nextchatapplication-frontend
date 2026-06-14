@@ -1,5 +1,5 @@
 import React from 'react'
-import { useAuth } from '../../Context/Authprovider';
+import { useAuth } from '../../Context/AuthProvider';
 
 function Message({ message }) {
   const [user] = useAuth();

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSocket } from "./SocketContext";
 import Peer from "simple-peer";
-import { useAuth } from "./Authprovider";
+import { useAuth } from "./AuthProvider";
 
 const CallContext = createContext();
 

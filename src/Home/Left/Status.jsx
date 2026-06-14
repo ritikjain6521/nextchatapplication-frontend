@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { PlusCircle } from 'lucide-react';
-import { useAuth } from '../../Context/Authprovider';
+import { useAuth } from '../../Context/AuthProvider';
 import StatusViewer from '../../components/StatusViewer';
 import { useSocket } from '../../Context/SocketContext';
 

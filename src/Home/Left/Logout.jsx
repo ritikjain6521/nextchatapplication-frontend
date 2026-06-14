@@ -1,6 +1,6 @@
 import React from 'react'
 import { LogOut } from "lucide-react";
-import { useAuth } from '../../Context/Authprovider';
+import { useAuth } from '../../Context/AuthProvider';
 
 function Logout() {
   const [user, setUser] = useAuth();

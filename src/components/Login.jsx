@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useForm } from "react-hook-form";
 import axios from 'axios';
-import { useAuth } from '../Context/Authprovider.jsx';
+import { useAuth } from '../Context/AuthProvider.jsx';
 import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, MessageCircle, Loader2 } from 'lucide-react';
 
