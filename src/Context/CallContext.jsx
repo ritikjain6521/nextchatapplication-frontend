@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSocket } from "./SocketContext";
 import Peer from "simple-peer";
 import { useAuth } from "./AuthProvider";
+import axios from "axios";
 
 const CallContext = createContext();
 
@@ -195,8 +196,20 @@ export const CallProvider = ({ children }) => {
     };
 
     // ─── End the call ─────────────────────────────────────────────────────────
-    const leaveCall = () => {
+    const leaveCall = async () => {
         const target = caller || idToCall;
+        
+        // If the call was never accepted, treat it as a missed call and send a chat message
+        if (target && !callAccepted) {
+            try {
+                await axios.post(`/api/message/send/${target}`, { 
+                    message: `📞 Missed ${callType === 'video' ? 'Video' : 'Voice'} Call`
+                });
+            } catch (error) {
+                console.error("Failed to log missed call:", error);
+            }
+        }
+
         if (target) {
             socket.emit("endCall", { to: target });
         }
