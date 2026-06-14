@@ -31,8 +31,13 @@ function User({ user }) {
     >
       <div className="flex space-x-4 px-8 py-3 hover:bg-slate-900 cursor-pointer duration-300 group">
         <div className={`avatar ${isOnline ? 'avatar-online' : 'avatar-offline'}`}>
-          <div className="w-12 rounded-full">
-            <img src="https://img.daisyui.com/images/profile/demo/gordon@192.webp" />
+          <div className="w-12 rounded-full overflow-hidden">
+            <img 
+              src={user?.profilePhoto || "https://img.daisyui.com/images/profile/demo/gordon@192.webp"} 
+              alt={user.fullname}
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.src = "https://img.daisyui.com/images/profile/demo/gordon@192.webp"; }}
+            />
           </div>
         </div>
         <div className="flex-1 flex items-center justify-between">

@@ -35,8 +35,13 @@ function ChatUser() {
         </button>
 
         <div className={`avatar ${isOnline ? 'avatar-online' : 'avatar-offline'}`}>
-          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-[3px] shadow-lg ${isOnline ? 'border-brand-primary' : 'border-slate-700'}`}>
-            <img src="https://img.daisyui.com/images/profile/demo/gordon@192.webp" alt="avatar" />
+          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-[3px] shadow-lg overflow-hidden ${isOnline ? 'border-brand-primary' : 'border-slate-700'}`}>
+            <img 
+              src={selectedConversation?.profilePhoto || "https://img.daisyui.com/images/profile/demo/gordon@192.webp"} 
+              alt="avatar"
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.src = "https://img.daisyui.com/images/profile/demo/gordon@192.webp"; }}
+            />
           </div>
         </div>
         <div>
@@ -44,7 +49,10 @@ function ChatUser() {
             {selectedConversation ? selectedConversation.fullname : "Select a user"}
           </h1>
           <span className={`text-[10px] md:text-xs font-medium tracking-wider uppercase ${isOnline ? 'text-brand-primary' : 'text-slate-500'}`}>
-            {isOnline ? "Online" : "Offline"}
+            {isOnline 
+              ? (selectedConversation?.customStatus || 'Online') 
+              : 'Offline'
+            }
           </span>
         </div>
       </div>
