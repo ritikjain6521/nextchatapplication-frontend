@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { PlusCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useAuth } from '../../Context/AuthProvider';
 import StatusViewer from '../../components/StatusViewer';
 import { useSocket } from '../../Context/SocketContext';
@@ -13,16 +13,10 @@ const Status = () => {
 
     useEffect(() => {
         fetchStatuses();
-
         if (socket) {
-            socket.on('newStatusUpdate', () => {
-                fetchStatuses();
-            });
+            socket.on('newStatusUpdate', fetchStatuses);
         }
-
-        return () => {
-            if (socket) socket.off('newStatusUpdate');
-        };
+        return () => { if (socket) socket.off('newStatusUpdate', fetchStatuses); };
     }, [socket]);
 
     const fetchStatuses = async () => {
@@ -37,20 +31,12 @@ const Status = () => {
     const handleUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const formData = new FormData();
         formData.append('media', file);
-
         try {
-            await axios.post('/api/status/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            await axios.post('/api/status/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
             fetchStatuses();
-            if (socket) {
-                socket.emit('newStatus', { userId: user._id });
-            }
+            if (socket) socket.emit('newStatus', { userId: user._id });
         } catch (error) {
             console.error("Error uploading status:", error);
         }
@@ -60,49 +46,76 @@ const Status = () => {
     const otherStatuses = statuses.filter(s => s.user?._id !== user?._id);
 
     return (
-        <div className="px-4 py-3 border-b border-white/10">
-            <h2 className="text-sm font-semibold text-slate-400 mb-3 px-2">Recent Updates</h2>
-            <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
-                
-                {/* My Status / Add Status */}
-                <div className="flex flex-col items-center space-y-1 min-w-16 cursor-pointer relative"
-                     onClick={() => myStatus ? setViewingStatusUser(myStatus) : document.getElementById('status-upload').click()}
+        <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+            <h2 className="text-xs font-bold uppercase tracking-widest mb-3 px-1" style={{ color: 'var(--text-muted)' }}>
+                Recent Updates
+            </h2>
+            <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-hide">
+                {/* My Status / Add */}
+                <div
+                    className="flex flex-col items-center gap-1.5 cursor-pointer shrink-0"
+                    onClick={() => myStatus
+                        ? setViewingStatusUser(myStatus)
+                        : document.getElementById('status-upload').click()
+                    }
                 >
-                    <div className={`w-14 h-14 rounded-full p-[2px] ${myStatus ? 'bg-gradient-to-tr from-brand-primary to-brand-secondary' : 'bg-slate-700'}`}>
-                        <div className="w-full h-full bg-brand-dark rounded-full overflow-hidden border-2 border-brand-dark">
-                            <img src="https://img.daisyui.com/images/profile/demo/gordon@192.webp" alt="My Status" className="w-full h-full object-cover opacity-80" />
+                    <div className="relative">
+                        <div
+                            className="w-12 h-12 rounded-full p-[2px] transition-transform hover:scale-105"
+                            style={myStatus
+                                ? { background: 'linear-gradient(135deg, #7c6af7, #8b5cf6)' }
+                                : { background: 'rgba(255,255,255,0.08)' }
+                            }
+                        >
+                            <div className="w-full h-full rounded-full overflow-hidden" style={{ background: 'var(--bg-card)', border: '2px solid var(--bg-secondary)' }}>
+                                <img
+                                    src={user?.profilePhoto || "https://img.daisyui.com/images/profile/demo/gordon@192.webp"}
+                                    alt="My Status"
+                                    className="w-full h-full object-cover"
+                                    onError={e => { e.target.src = "https://img.daisyui.com/images/profile/demo/gordon@192.webp"; }}
+                                />
+                            </div>
                         </div>
+                        {!myStatus && (
+                            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center"
+                                style={{ background: 'linear-gradient(135deg, #7c6af7, #6366f1)', border: '1.5px solid var(--bg-secondary)' }}>
+                                <Plus className="w-3 h-3 text-white" strokeWidth={3} />
+                            </div>
+                        )}
                     </div>
-                    {!myStatus && (
-                        <div className="absolute bottom-5 right-0 bg-brand-primary rounded-full text-white">
-                            <PlusCircle className="w-5 h-5" />
-                        </div>
-                    )}
-                    <span className="text-xs text-slate-300">My Status</span>
+                    <span className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>My Status</span>
                     <input type="file" id="status-upload" className="hidden" accept="image/*,video/*" onChange={handleUpload} />
                 </div>
 
-                {/* Other Users' Statuses */}
+                {/* Other Statuses */}
                 {otherStatuses.map((userStatus) => (
-                    <div key={userStatus.user._id} 
-                         className="flex flex-col items-center space-y-1 min-w-16 cursor-pointer"
-                         onClick={() => setViewingStatusUser(userStatus)}
+                    <div
+                        key={userStatus.user._id}
+                        className="flex flex-col items-center gap-1.5 cursor-pointer shrink-0"
+                        onClick={() => setViewingStatusUser(userStatus)}
                     >
-                        <div className="w-14 h-14 rounded-full p-[2px] bg-gradient-to-tr from-brand-primary to-brand-secondary">
-                            <div className="w-full h-full bg-brand-dark rounded-full overflow-hidden border-2 border-brand-dark">
-                                <img src="https://img.daisyui.com/images/profile/demo/gordon@192.webp" alt={userStatus.user.fullname} className="w-full h-full object-cover" />
+                        <div className="relative">
+                            <div className="w-12 h-12 rounded-full p-[2px] transition-transform hover:scale-105"
+                                style={{ background: 'linear-gradient(135deg, #7c6af7, #8b5cf6)' }}>
+                                <div className="w-full h-full rounded-full overflow-hidden" style={{ background: 'var(--bg-card)', border: '2px solid var(--bg-secondary)' }}>
+                                    <img
+                                        src={userStatus.user?.profilePhoto || "https://img.daisyui.com/images/profile/demo/gordon@192.webp"}
+                                        alt={userStatus.user.fullname}
+                                        className="w-full h-full object-cover"
+                                        onError={e => { e.target.src = "https://img.daisyui.com/images/profile/demo/gordon@192.webp"; }}
+                                    />
+                                </div>
                             </div>
                         </div>
-                        <span className="text-xs text-slate-300 truncate w-16 text-center">{userStatus.user.fullname.split(' ')[0]}</span>
+                        <span className="text-[11px] font-medium truncate w-14 text-center" style={{ color: 'var(--text-secondary)' }}>
+                            {userStatus.user.fullname.split(' ')[0]}
+                        </span>
                     </div>
                 ))}
             </div>
 
             {viewingStatusUser && (
-                <StatusViewer 
-                    userStatus={viewingStatusUser} 
-                    onClose={() => setViewingStatusUser(null)} 
-                />
+                <StatusViewer userStatus={viewingStatusUser} onClose={() => setViewingStatusUser(null)} />
             )}
         </div>
     );

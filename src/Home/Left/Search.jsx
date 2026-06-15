@@ -1,20 +1,35 @@
 import React from 'react'
 import { Search as SearchIcon } from "lucide-react";
 
-function Search() {
+function Search({ searchQuery, setSearchQuery }) {
   return (
-   <div className="p-4 border-b border-white/5">
-     <div className="relative group">
-       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-         <SearchIcon className="h-5 w-5 text-slate-400 group-focus-within:text-brand-primary transition-colors duration-300" />
-       </div>
-       <input 
-         type="text" 
-         className="w-full bg-white/5 border border-white/10 text-white rounded-full pl-10 pr-4 py-2.5 outline-none focus:bg-white/10 focus:border-brand-primary/50 transition-all duration-300 placeholder-slate-400 shadow-inner" 
-         placeholder="Search contacts..." 
-       />
-     </div>
-   </div>
+    <div className="relative">
+      <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
+        <SearchIcon className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+      </div>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full text-sm pl-10 pr-4 py-2.5 rounded-xl outline-none transition-all duration-200"
+        placeholder="Search messages or users"
+        style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid var(--border-subtle)',
+          color: 'var(--text-primary)',
+        }}
+        onFocus={e => {
+          e.target.style.borderColor = 'rgba(124,106,247,0.5)';
+          e.target.style.background = 'rgba(255,255,255,0.07)';
+          e.target.style.boxShadow = '0 0 0 3px rgba(124,106,247,0.1)';
+        }}
+        onBlur={e => {
+          e.target.style.borderColor = 'var(--border-subtle)';
+          e.target.style.background = 'rgba(255,255,255,0.05)';
+          e.target.style.boxShadow = '';
+        }}
+      />
+    </div>
   )
 }
 

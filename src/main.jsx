@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { AuthProvider } from './Context/AuthProvider.jsx'
 import { SocketProvider } from './Context/SocketContext.jsx'
 import { CallProvider } from './Context/CallContext.jsx'
+import { ThemeProvider } from './Context/ThemeContext.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import axios from 'axios';
 
@@ -14,12 +15,14 @@ axios.defaults.withCredentials = true;
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <AuthProvider>
-      <SocketProvider>
-        <CallProvider>
-          <App/>
-        </CallProvider>
-      </SocketProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SocketProvider>
+          <CallProvider>
+            <App/>
+          </CallProvider>
+        </SocketProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </BrowserRouter>
 )

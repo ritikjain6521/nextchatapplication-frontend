@@ -13,11 +13,15 @@ const useGetMessage = () => {
             setLoading(true)
             if(selectedConversation && selectedConversation._id) {
                  try{
-                const res=await axios.get(`/api/message/get/${selectedConversation._id}`)
-                setMessage(res.data)
-                setLoading(false)
-
-            }
+                    if (selectedConversation.isAI) {
+                        setMessage([]);
+                        setLoading(false);
+                        return;
+                    }
+                    const res=await axios.get(`/api/message/get/${selectedConversation._id}`)
+                    setMessage(res.data)
+                    setLoading(false)
+                }
             catch(error){
                 console.log(error)
             }

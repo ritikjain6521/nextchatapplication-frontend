@@ -1,68 +1,67 @@
 import React from 'react'
 import useConversation from '../../Zustand/useConversation.js'
 import { useSocket } from '../../Context/SocketContext.jsx'
-import { Phone, Video } from 'lucide-react'
-import { useCall } from '../../Context/CallContext.jsx'
 
 function User({ user }) {
   const { selectedConversation, setSelectedConversation } = useConversation();
   const { onlineUsers } = useSocket();
-  const { callUser } = useCall();
 
   const isSelected = selectedConversation?._id === user._id;
-  const isOnline = onlineUsers.includes(user._id);
-
-  const handleAudioCall = (e) => {
-    e.stopPropagation();
-    setSelectedConversation(user);
-    callUser(user._id, 'audio');
-  };
-
-  const handleVideoCall = (e) => {
-    e.stopPropagation();
-    setSelectedConversation(user);
-    callUser(user._id, 'video');
-  };
+  const isOnline = Array.isArray(onlineUsers) && onlineUsers.includes(user._id);
 
   return (
     <div
-      className={`hover:bg-slate-600 duration-300 ${isSelected ? "bg-slate-700" : ""}`}
+      className="user-item flex items-center gap-3 px-4 py-3 mx-2 rounded-xl transition-all duration-150"
+      style={isSelected ? {
+        background: 'rgba(124,106,247,0.12)',
+        borderLeft: '3px solid #7c6af7',
+      } : {}}
       onClick={() => setSelectedConversation(user)}
     >
-      <div className="flex space-x-4 px-8 py-3 hover:bg-slate-900 cursor-pointer duration-300 group">
-        <div className={`avatar ${isOnline ? 'avatar-online' : 'avatar-offline'}`}>
-          <div className="w-12 rounded-full overflow-hidden">
-            <img 
-              src={user?.profilePhoto || "https://img.daisyui.com/images/profile/demo/gordon@192.webp"} 
+      {/* Avatar with online ring */}
+      <div className="relative shrink-0">
+        <div className={isOnline ? 'avatar-ring-green' : 'avatar-ring-grey'}>
+          <div className="w-11 h-11 rounded-full overflow-hidden" style={{ background: 'var(--bg-card)' }}>
+            <img
+              src={user?.profilePhoto || "https://img.daisyui.com/images/profile/demo/gordon@192.webp"}
               alt={user.fullname}
               className="w-full h-full object-cover"
-              onError={(e) => { e.target.src = "https://img.daisyui.com/images/profile/demo/gordon@192.webp"; }}
+              onError={e => { e.target.src = "https://img.daisyui.com/images/profile/demo/gordon@192.webp"; }}
             />
           </div>
         </div>
-        <div className="flex-1 flex items-center justify-between">
-          <div className="overflow-hidden">
-            <h1 className="font-bold truncate">{user.fullname}</h1>
-            <span className="text-xs text-slate-400 truncate block">{user.email}</span>
-          </div>
-          <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button 
-                onClick={handleAudioCall} 
-                className="p-2 rounded-full bg-slate-800 hover:bg-brand-secondary/20 text-slate-300 hover:text-brand-secondary transition-colors"
-                title="Voice Call"
-            >
-                <Phone className="w-4 h-4" />
-            </button>
-            <button 
-                onClick={handleVideoCall} 
-                className="p-2 rounded-full bg-slate-800 hover:bg-brand-primary/20 text-slate-300 hover:text-brand-primary transition-colors"
-                title="Video Call"
-            >
-                <Video className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        {/* Online dot */}
+        <span
+          className="absolute bottom-0 right-0"
+          style={{
+            width: '11px', height: '11px',
+            borderRadius: '50%',
+            background: isOnline ? '#22c55e' : '#475569',
+            border: '2px solid var(--bg-secondary)',
+            boxShadow: isOnline ? '0 0 6px rgba(34,197,94,0.5)' : 'none',
+          }}
+        />
       </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+            {user.isGroup ? user.groupName : user.fullname}
+          </h3>
+          <span className="text-[11px] shrink-0 ml-2" style={{ color: 'var(--text-muted)' }}>
+            {user.isGroup ? `${user.members?.length || 0} members` : (isOnline ? 'Online' : '')}
+          </span>
+        </div>
+        <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+          {user.isGroup ? 'Group Chat' : user.email}
+        </p>
+      </div>
+
+      {/* Unread Badge (placeholder - can be made dynamic) */}
+      {isSelected && (
+        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: '#7c6af7' }} />
+      )}
     </div>
   );
 }
