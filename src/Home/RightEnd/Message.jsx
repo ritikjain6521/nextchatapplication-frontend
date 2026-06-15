@@ -7,7 +7,7 @@ import axios from 'axios';
 // Resolve relative /uploads/... to the full backend origin
 const BACKEND_URL = import.meta.env.MODE === 'development'
   ? 'http://localhost:3000'
-  : 'https://nextchat-realtimeapplication-backend-3.onrender.com';
+  : 'https://nextchat-realtimeapplication-backend-4.onrender.com';
 
 const resolveMedia = (url) => {
   if (!url) return null;
