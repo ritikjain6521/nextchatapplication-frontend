@@ -33,10 +33,12 @@ const useSendMessage = () => {
             if (isAI) {
                 let authUserId = "me";
                 try {
-                    const authStr = localStorage.getItem("ChatApp");
+                    const authStr = localStorage.getItem("user");
                     if (authStr) {
-                        const user = JSON.parse(authStr);
-                        if (user && user._id) authUserId = user._id;
+                        const parsed = JSON.parse(authStr);
+                        // Support both Login {user:{_id}} and Signup {User:{_id}} shapes
+                        const u = parsed?.user || parsed?.User || parsed;
+                        if (u && u._id) authUserId = u._id;
                     }
                 } catch (e) {}
 

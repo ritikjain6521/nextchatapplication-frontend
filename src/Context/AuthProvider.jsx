@@ -1,15 +1,20 @@
 import React, { createContext, useContext, useState } from "react";
-import Cookies from "js-cookie";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // ✅ Get user from cookies or localStorage
-  const initialUserState =
-    Cookies.get("jwt") || localStorage.getItem("user");
+  // Read the stored user object from localStorage (set during login/signup)
+  // Never try to parse the JWT cookie — it's a raw token string, not JSON
+  const getInitialUser = () => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : undefined;
+    } catch {
+      localStorage.removeItem("user");
+      return undefined;
+    }
+  };
 
-  const [user, setUser] = useState(
-    initialUserState ? JSON.parse(initialUserState) : undefined
-  );
+  const [user, setUser] = useState(getInitialUser);
 
   return (
     <AuthContext.Provider value={[user, setUser]}>
