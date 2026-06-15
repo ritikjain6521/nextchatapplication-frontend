@@ -17,7 +17,7 @@ export const SocketProvider = ({ children }) => {
         if (user) {
             const actualUser = user.user || user.User || user; // Support both Login and Signup payload structures
             
-            const socketUrl = import.meta.env.MODE === "development" ? "http://localhost:3000" : "https://nextchat-realtimeapplication-backend-2.onrender.com";
+            const socketUrl = import.meta.env.MODE === "development" ? "http://localhost:3000" : "https://nextchat-realtimeapplication-backend-3.onrender.com";
             const socketInstance = io(socketUrl, {
                 query: {
                     userId: actualUser._id,
