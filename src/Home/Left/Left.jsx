@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Search from './Search'
 import Users from './Users'
 import Logout from './Logout'
@@ -9,17 +10,20 @@ import ProfileSettingsModal from '../../components/ProfileSettingsModal'
 import CreateGroupModal from '../../components/CreateGroupModal'
 import CreateChannelModal from '../../components/CreateChannelModal'
 import NewChatModal from '../../components/NewChatModal'
-import { Settings, MessageSquare, Phone, Users as UsersIcon, Star, Hash, Sparkles, Loader2 } from 'lucide-react'
+import { Settings, MessageSquare, Phone, Users as UsersIcon, Star, Hash, Sparkles, Loader2, ShieldAlert } from 'lucide-react'
 import useGetAllUser from '../../Context/useGetAllUser.jsx'
 import useGetChannels from '../../Context/useGetChannels.js'
 import useGetStarredMessages from '../../Context/useGetStarredMessages.js'
+import { useAuth } from '../../Context/AuthProvider.jsx'
 
 const Left = () => {
   const { selectedConversation, setSelectedConversation } = useConversation()
+  const navigate = useNavigate()
   const [showProfile, setShowProfile] = useState(false)
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [showCreateChannel, setShowCreateChannel] = useState(false)
   const [showNewChat, setShowNewChat] = useState(false)
+  const [authUser] = useAuth()
   const [activeNav, setActiveNav] = useState('chats')
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilterTab, setActiveFilterTab] = useState('All')
@@ -151,6 +155,20 @@ const Left = () => {
           ))}
         </div>
 
+        {/* Admin Panel - only for admins */}
+        {authUser?.isAdmin && (
+          <button
+            title="Admin Panel"
+            onClick={() => navigate('/admin')}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 mb-1"
+            style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.2)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.1)'; }}
+          >
+            <ShieldAlert className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Settings */}
         <button
           title="Profile Settings"
@@ -277,6 +295,23 @@ const Left = () => {
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               The {activeNav} feature is currently under development.
             </p>
+          </div>
+        )}
+
+        {/* Wallet Widget */}
+        {authUser && (
+          <div className="shrink-0 p-4" style={{ borderTop: '1px solid var(--border-subtle)', background: 'rgba(124,106,247,0.03)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-white uppercase tracking-wider">Wallet</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(34,197,94,0.2)', color: '#22c55e' }}>{authUser.plan || 'Free'} Plan</span>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4" style={{ color: '#7c6af7' }} />
+              <span className="text-sm font-semibold text-white">{authUser.credits !== undefined ? authUser.credits : 100} Credits</span>
+            </div>
+            <button className="w-full py-1.5 text-xs font-bold rounded-lg transition-all" style={{ background: 'linear-gradient(135deg, #7c6af7, #6366f1)', color: 'white' }}>
+              Recharge
+            </button>
           </div>
         )}
 

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import axios from 'axios';
 import { useAuth } from '../Context/AuthProvider';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, User, MessageCircle, Loader2, CheckCircle2, Sparkles, Shield, Zap, Users } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, MessageCircle, Loader2, CheckCircle2, Sparkles, Shield, Zap, Users, CreditCard, ChevronDown } from 'lucide-react';
 
 const features = [
   { icon: Zap, title: 'Real-time Messaging', desc: 'Instant, zero-delay delivery' },
@@ -17,8 +17,12 @@ function Signup() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [signupData, setSignupData] = useState(null);
+    const [processingPayment, setProcessingPayment] = useState(false);
 
     const password = watch("password", "");
+    const selectedPlan = watch("plan", "Free");
 
     const getPasswordStrength = (pwd) => {
         if (!pwd) return { label: '', color: '#475569', pct: 0 };
@@ -30,22 +34,120 @@ function Signup() {
     const strength = getPasswordStrength(password);
 
     const onSubmit = async (data) => {
+        if (data.plan !== 'Free') {
+            setSignupData(data);
+            setShowPaymentModal(true);
+            return;
+        }
+        await processRegistration(data);
+    };
+
+    const processRegistration = async (data) => {
         setLoading(true);
         try {
             const res = await axios.post("/api/User/signup", {
                 fullname: data.fullname,
                 email: data.Email,
                 password: data.password,
-                confirmPassword: data.confirmPassword
+                confirmPassword: data.confirmPassword,
+                plan: data.plan
             });
             if (res.data) {
-                localStorage.setItem("user", JSON.stringify(res.data));
-                setUser(res.data);
+                localStorage.setItem("user", JSON.stringify(res.data.User || res.data));
+                setUser(res.data.User || res.data);
             }
         } catch (error) {
             if (error.response) alert(error.response.data.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const getPlanAmount = (planName) => {
+        if (planName === 'Pro') return 299;
+        if (planName === 'Team') return 999;
+        if (planName === 'Enterprise') return 2999;
+        return 0;
+    };
+
+    const handleRazorpayPayment = async () => {
+        setProcessingPayment(true);
+        try {
+            // 1. Create order
+            const amount = getPlanAmount(signupData.plan);
+            const orderRes = await axios.post("/api/payment/create-order", { amount, plan: signupData.plan });
+            
+            // 2. Open Razorpay Checkout
+            const options = {
+                key: "rzp_test_T2kPx2zeXlGhhZ", // Public Key
+                amount: orderRes.data.amount,
+                currency: "INR",
+                name: "NexChat",
+                description: `Upgrade to ${signupData.plan} Plan`,
+                order_id: orderRes.data.id,
+                handler: async (response) => {
+                    try {
+                        // We must register the user first as a 'Free' user so we have a token to verify payment securely
+                        // OR we can pass registration data securely. Let's just create the user as Free, log them in, then verify payment to upgrade.
+                        const regRes = await axios.post("/api/User/signup", {
+                            fullname: signupData.fullname,
+                            email: signupData.Email,
+                            password: signupData.password,
+                            confirmPassword: signupData.confirmPassword,
+                            plan: 'Free' // Start as Free, upgraded by verify endpoint
+                        });
+                        
+                        if (regRes.data) {
+                            localStorage.setItem("user", JSON.stringify(regRes.data.User || regRes.data));
+                            setUser(regRes.data.User || regRes.data);
+                            
+                            // Now call verify which will upgrade the plan
+                            const verifyRes = await axios.post("/api/payment/verify", {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                plan: signupData.plan,
+                                amount: amount
+                            });
+
+                            // Update user state with new plan
+                            if (verifyRes.data.user) {
+                                localStorage.setItem("user", JSON.stringify(verifyRes.data.user));
+                                setUser(verifyRes.data.user);
+                            }
+                            
+                            setShowPaymentModal(false);
+                            // It will naturally redirect since useAuth user is set
+                        }
+                    } catch (error) {
+                        alert(error.response?.data?.message || "Payment verification failed");
+                    }
+                },
+                prefill: {
+                    name: signupData.fullname,
+                    email: signupData.Email,
+                },
+                theme: {
+                    color: "#7c6af7",
+                },
+                modal: {
+                    ondismiss: () => {
+                        setProcessingPayment(false);
+                    }
+                }
+            };
+            
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response){
+                alert("Payment Failed: " + response.error.description);
+                setProcessingPayment(false);
+            });
+            rzp.open();
+
+        } catch (error) {
+            console.error(error);
+            alert("Failed to initiate payment");
+            setProcessingPayment(false);
         }
     };
 
@@ -155,16 +257,38 @@ function Signup() {
                     {/* Hint card */}
                     <div style={{
                         padding: '0.875rem 1.25rem', borderRadius: '14px', marginBottom: '1.5rem',
-                        background: 'rgba(124,106,247,0.06)', border: '1px solid rgba(124,106,247,0.15)',
+                        background: selectedPlan !== 'Free' ? 'rgba(34,197,94,0.1)' : 'rgba(124,106,247,0.06)', 
+                        border: `1px solid ${selectedPlan !== 'Free' ? 'rgba(34,197,94,0.3)' : 'rgba(124,106,247,0.15)'}`,
                         display: 'flex', alignItems: 'center', gap: '0.75rem',
+                        transition: 'all 0.3s ease'
                     }}>
-                        <Sparkles size={16} color="#a78bfa" />
+                        <Sparkles size={16} color={selectedPlan !== 'Free' ? "#22c55e" : "#a78bfa"} />
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: 0 }}>
-                            Free account · No credit card needed
+                            {selectedPlan === 'Free' ? 'Free account · No credit card needed' : `${selectedPlan} Plan · Proceed to secure payment`}
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {/* Plan Selection */}
+                        <div>
+                            <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Select Plan</label>
+                            <div style={{...inputStyle(false), padding: 0, position: 'relative'}}>
+                                <select 
+                                    {...register("plan")}
+                                    style={{ 
+                                        background: 'transparent', border: 'none', outline: 'none', width: '100%', 
+                                        padding: '0.75rem 1rem', fontSize: '0.875rem', color: 'var(--text-primary)', 
+                                        appearance: 'none', cursor: 'pointer' 
+                                    }}
+                                >
+                                    <option value="Free" style={{background: '#160f35', color: '#fff'}}>Free Plan (100 Credits)</option>
+                                    <option value="Pro" style={{background: '#160f35', color: '#fff'}}>Pro Plan (₹299/mo - 500 Credits)</option>
+                                    <option value="Team" style={{background: '#160f35', color: '#fff'}}>Team Plan (₹999/mo - 2500 Credits)</option>
+                                    <option value="Enterprise" style={{background: '#160f35', color: '#fff'}}>Enterprise (₹2999/mo - 10000 Credits)</option>
+                                </select>
+                                <ChevronDown size={16} color="var(--text-muted)" style={{position: 'absolute', right: '1rem', pointerEvents: 'none'}} />
+                            </div>
+                        </div>
                         {/* Full Name */}
                         <div>
                             <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>Full Name</label>
@@ -276,6 +400,67 @@ function Signup() {
                     </p>
                 </div>
             </div>
+
+            {/* Mock Payment Gateway Modal */}
+            {showPaymentModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+                }}>
+                    <div style={{
+                        background: 'var(--bg-card)', border: '1px solid var(--border-medium)',
+                        borderRadius: '24px', padding: '2rem', width: '100%', maxWidth: '400px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.5)', textAlign: 'center'
+                    }}>
+                        <div style={{
+                            width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(34,197,94,0.1)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem'
+                        }}>
+                            <CreditCard size={30} color="#22c55e" />
+                        </div>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', marginBottom: '0.5rem' }}>Secure Checkout</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                            You are subscribing to the <strong>{signupData?.plan} Plan</strong>.
+                        </p>
+                        
+                        <div style={{ background: 'var(--bg-primary)', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', textAlign: 'left' }}>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Payment Method</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff', fontSize: '0.9rem' }}>
+                                <div style={{width: 30, height: 20, background: '#e5e7eb', borderRadius: 4, display: 'flex', alignItems:'center', justifyContent: 'center'}}>
+                                    <span style={{fontSize: 10, color: '#000', fontWeight: 'bold'}}>VISA</span>
+                                </div>
+                                •••• •••• •••• 4242
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleRazorpayPayment}
+                            disabled={processingPayment}
+                            style={{
+                                width: '100%', padding: '0.875rem', borderRadius: '12px',
+                                background: processingPayment ? '#4b5563' : '#22c55e', color: 'white', fontWeight: 700,
+                                border: 'none', cursor: processingPayment ? 'not-allowed' : 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {processingPayment ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <><Lock size={16} /> Pay Securely</>}
+                        </button>
+                        {!processingPayment && (
+                            <button
+                                onClick={() => setShowPaymentModal(false)}
+                                style={{
+                                    marginTop: '1rem', background: 'none', border: 'none', color: 'var(--text-muted)',
+                                    fontSize: '0.8rem', cursor: 'pointer'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
