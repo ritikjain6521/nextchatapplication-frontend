@@ -22,8 +22,9 @@ function Login() {
         try {
             const res = await axios.post("/api/User/login", { email: data.Email, password: data.password });
             if (res.data) {
-                localStorage.setItem("user", JSON.stringify(res.data));
-                setUser(res.data);
+                if (res.data.token) localStorage.setItem("token", res.data.token);
+                localStorage.setItem("user", JSON.stringify(res.data.user || res.data));
+                setUser(res.data.user || res.data);
             }
         } catch (error) {
             if (error.response) alert(error.response.data.message);

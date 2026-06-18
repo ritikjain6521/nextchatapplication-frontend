@@ -53,6 +53,7 @@ function Signup() {
                 plan: data.plan
             });
             if (res.data) {
+                if (res.data.token) localStorage.setItem("token", res.data.token);
                 localStorage.setItem("user", JSON.stringify(res.data.User || res.data));
                 setUser(res.data.User || res.data);
             }
@@ -98,6 +99,7 @@ function Signup() {
                         });
                         
                         if (regRes.data) {
+                            if (regRes.data.token) localStorage.setItem("token", regRes.data.token);
                             localStorage.setItem("user", JSON.stringify(regRes.data.User || regRes.data));
                             setUser(regRes.data.User || regRes.data);
                             

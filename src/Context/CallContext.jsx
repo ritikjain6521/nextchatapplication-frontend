@@ -42,13 +42,13 @@ export const CallProvider = ({ children }) => {
     const connectionRef = useRef();
 
     // ─── Cleanup helper ───────────────────────────────────────────────────────
-    const cleanupCall = (doReload = false) => {
+    const cleanupCall = () => {
         if (connectionRef.current) {
             connectionRef.current.destroy();
             connectionRef.current = null;
         }
         setCallAccepted(false);
-        setCallEnded(false);
+        setCallEnded(true);
         setReceivingCall(false);
         setIsCalling(false);
         setRemoteStream(null);
@@ -59,7 +59,8 @@ export const CallProvider = ({ children }) => {
             stream.getTracks().forEach((t) => t.stop());
             setStream(null);
         }
-        if (doReload) window.location.reload();
+        if (myVideo.current) myVideo.current.srcObject = null;
+        if (userVideo.current) userVideo.current.srcObject = null;
     };
 
     // ─── Socket listeners (stable, in useEffect) ─────────────────────────────
@@ -81,7 +82,7 @@ export const CallProvider = ({ children }) => {
         };
 
         const onCallEnded = () => {
-            cleanupCall(true);
+            cleanupCall();
         };
 
         socket.on("callUser", onCallUser);
@@ -94,6 +95,36 @@ export const CallProvider = ({ children }) => {
             socket.off("callEnded", onCallEnded);
         };
     }, [socket]);   // Only re-run when socket changes
+
+    // ─── Ring Timeout (2 mins) ─────────────────────────────────────────────────
+    useEffect(() => {
+        let ringTimeout;
+        if ((isCalling || receivingCall) && !callAccepted) {
+            ringTimeout = setTimeout(() => {
+                leaveCall();
+            }, 120000); // 2 minutes
+        }
+        return () => clearTimeout(ringTimeout);
+    }, [isCalling, receivingCall, callAccepted]);
+
+    // ─── Plan Duration Timeout ────────────────────────────────────────────────
+    useEffect(() => {
+        let durationTimeout;
+        if (callAccepted) {
+            const actualUser = user?.user || user?.User || user || {};
+            const plan = actualUser.plan || 'Free';
+            
+            let durationMinutes = 5; // Default Free
+            if (plan === 'Pro') durationMinutes = 10;
+            else if (plan === 'Team' || plan === 'Enterprise') durationMinutes = 30;
+            
+            durationTimeout = setTimeout(() => {
+                alert(`Call limit of ${durationMinutes} minutes reached for your ${plan} plan.`);
+                leaveCall();
+            }, durationMinutes * 60 * 1000);
+        }
+        return () => clearTimeout(durationTimeout);
+    }, [callAccepted]);
 
     // ─── Assign local stream to video element when both are ready ─────────────
     useEffect(() => {
@@ -213,7 +244,7 @@ export const CallProvider = ({ children }) => {
         if (target) {
             socket.emit("endCall", { to: target });
         }
-        cleanupCall(true);
+        cleanupCall();
     };
 
     return (

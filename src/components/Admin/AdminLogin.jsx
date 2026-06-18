@@ -22,6 +22,7 @@ function AdminLogin() {
         password: data.password,
       });
       if (res.data?.user) {
+        if (res.data.token) localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data.user));
         setUser(res.data.user);
         navigate('/admin');
