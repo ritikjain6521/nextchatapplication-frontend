@@ -3,6 +3,7 @@ import useConversation from '../../Zustand/useConversation'
 import { useSocket } from '../../Context/SocketContext'
 import { Video, Phone, ArrowLeft, Search, MoreHorizontal, X, Hash } from 'lucide-react'
 import { useCall } from '../../Context/CallContext'
+import { useAuth } from '../../Context/AuthProvider'
 import axios from 'axios'
 import ViewInfoModal from '../../components/ViewInfoModal'
 function ChatUser({ searchMessage, setSearchMessage }) {
@@ -12,6 +13,10 @@ function ChatUser({ searchMessage, setSearchMessage }) {
   const [showSearch, setShowSearch] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [authUser, setAuthUser] = useAuth();
+  
+  const actualUser = authUser?.user || authUser?.User || authUser || {};
+  const isBlocked = Array.isArray(actualUser.blockedUsers) && actualUser.blockedUsers.includes(selectedConversation?._id);
   
   const handleClearChat = async () => {
     try {
@@ -42,8 +47,16 @@ function ChatUser({ searchMessage, setSearchMessage }) {
         alert("Left successfully");
         setSelectedConversation(null);
       } else {
-        await axios.post(`/api/action/block/${selectedConversation._id}`);
-        alert("Block toggled successfully");
+        const res = await axios.post(`/api/action/block/${selectedConversation._id}`);
+        alert(res.data.message);
+        
+        const updatedUser = { ...authUser };
+        if (updatedUser.user) updatedUser.user.blockedUsers = res.data.blockedUsers;
+        else if (updatedUser.User) updatedUser.User.blockedUsers = res.data.blockedUsers;
+        else updatedUser.blockedUsers = res.data.blockedUsers;
+        
+        setAuthUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
       }
       setShowMoreOptions(false);
     } catch (err) {
@@ -250,7 +263,7 @@ function ChatUser({ searchMessage, setSearchMessage }) {
                            ) : (
                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
                            )}
-                           {isChannel ? 'Leave Channel' : selectedConversation?.isGroup ? 'Leave Group' : 'Block User'}
+                           {isChannel ? 'Leave Channel' : selectedConversation?.isGroup ? 'Leave Group' : (isBlocked ? 'Unblock User' : 'Block User')}
                          </button>
                        )}
                      </div>

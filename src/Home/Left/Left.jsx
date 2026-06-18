@@ -10,7 +10,8 @@ import ProfileSettingsModal from '../../components/ProfileSettingsModal'
 import CreateGroupModal from '../../components/CreateGroupModal'
 import CreateChannelModal from '../../components/CreateChannelModal'
 import NewChatModal from '../../components/NewChatModal'
-import { Settings, MessageSquare, Phone, Users as UsersIcon, Star, Hash, Sparkles, Loader2, ShieldAlert } from 'lucide-react'
+import SupportTicketModal from '../../components/SupportTicketModal'
+import { Settings, MessageSquare, Phone, Users as UsersIcon, Star, Hash, Sparkles, Loader2, ShieldAlert, Ticket } from 'lucide-react'
 import useGetAllUser from '../../Context/useGetAllUser.jsx'
 import useGetChannels from '../../Context/useGetChannels.js'
 import useGetStarredMessages from '../../Context/useGetStarredMessages.js'
@@ -23,6 +24,7 @@ const Left = () => {
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [showCreateChannel, setShowCreateChannel] = useState(false)
   const [showNewChat, setShowNewChat] = useState(false)
+  const [showSupportTicket, setShowSupportTicket] = useState(false)
   const [authUser] = useAuth()
   const [activeNav, setActiveNav] = useState('chats')
   const [searchQuery, setSearchQuery] = useState('')
@@ -168,6 +170,18 @@ const Left = () => {
             <ShieldAlert className="w-5 h-5" />
           </button>
         )}
+
+        {/* Support Ticket */}
+        <button
+          title="Support Ticket"
+          onClick={() => setShowSupportTicket(true)}
+          className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 mb-1"
+          style={{ color: 'var(--text-secondary)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,106,247,0.12)'; e.currentTarget.style.color = '#7c6af7'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+        >
+          <Ticket className="w-5 h-5" />
+        </button>
 
         {/* Settings */}
         <button
@@ -359,6 +373,7 @@ const Left = () => {
       {showCreateGroup && <CreateGroupModal onClose={() => setShowCreateGroup(false)} allUsers={allUser || []} />}
       {showCreateChannel && <CreateChannelModal onClose={() => setShowCreateChannel(false)} allUsers={allUser || []} onChannelCreated={refetchChannels} />}
       {showNewChat && <NewChatModal onClose={() => setShowNewChat(false)} allUsers={allUser || []} />}
+      {showSupportTicket && <SupportTicketModal onClose={() => setShowSupportTicket(false)} />}
     </>
   )
 }
