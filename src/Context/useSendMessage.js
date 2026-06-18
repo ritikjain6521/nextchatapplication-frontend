@@ -18,7 +18,7 @@ const useSendMessage = () => {
                 const formData = new FormData();
                 formData.append('message', data.message || '');
                 formData.append('media', data.file);
-                
+
                 res = await axios.post(endpoint, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
@@ -40,7 +40,7 @@ const useSendMessage = () => {
                         const u = parsed?.user || parsed?.User || parsed;
                         if (u && u._id) authUserId = u._id;
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 const myMsg = {
                     _id: "me_" + Date.now(),

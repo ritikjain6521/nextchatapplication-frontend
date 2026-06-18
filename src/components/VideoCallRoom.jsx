@@ -32,8 +32,9 @@ const VideoCallRoom = () => {
         }
     }, [remoteStream, userVideo, callAccepted]);
 
-    if (!isCalling && !callAccepted) return null;
-    if (callEnded) return null;
+    // Show the call room when actively calling (ringing) or when call is connected
+    const isActive = isCalling || (callAccepted && !callEnded);
+    if (!isActive) return null;
 
     const toggleMute = () => {
         if (stream) {
