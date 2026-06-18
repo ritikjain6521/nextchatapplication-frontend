@@ -31,7 +31,7 @@ function App() {
       {user && <VideoCallRoom />}
       <Routes>
         <Route path='/' element={user ? (
-          <div className='flex h-screen w-full overflow-hidden' style={{ background: 'var(--bg-primary)' }}>
+          <div className='flex h-[100dvh] w-full overflow-hidden' style={{ background: 'var(--bg-primary)' }}>
             {/* Ambient Background Glows */}
             <div className="fixed top-[-20%] left-[-5%] w-[35%] h-[35%] rounded-full pointer-events-none animate-blob"
               style={{ background: 'radial-gradient(circle, rgba(124,106,247,0.12) 0%, transparent 70%)', zIndex: 0 }} />

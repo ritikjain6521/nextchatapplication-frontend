@@ -53,7 +53,7 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-[#0a0a0f] text-white font-sans overflow-hidden">
+    <div className="flex h-[100dvh] w-full bg-[#0a0a0f] text-white font-sans overflow-hidden">
       
       {/* Sidebar */}
       <aside className={`flex flex-col border-r border-white/5 bg-[#12121a] transition-all duration-300 ${isSidebarOpen ? 'w-[260px]' : 'w-[72px]'} shrink-0`}>

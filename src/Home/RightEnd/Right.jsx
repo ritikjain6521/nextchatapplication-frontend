@@ -24,7 +24,7 @@ function Right() {
                 <Mesages searchMessage={searchMessage} />
              </div>
              
-             <div className="shrink-0 relative z-20 pb-20 md:pb-0">
+             <div className="shrink-0 relative z-20">
                 <Typesend/>
              </div>
            </div>
